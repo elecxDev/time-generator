@@ -45,7 +45,7 @@ const DEFAULT_STATE = {
   width: 1080,
   height: 1920,
   fps: 60,
-  duration: 5.0, // seconds, up to 300s (5 minutes)
+  duration: 36.0, // seconds, up to 300s (5 minutes)
 
   // Time Range
   startHour: 0,
@@ -71,9 +71,9 @@ const DEFAULT_STATE = {
 
   // Animation & Motion Dynamics
   rollMode: 'ultra-smooth', // 'ultra-smooth' (screen-time normalized), 'continuous', 'glide'
-  smoothness: 0.85,         // S-curve rollover fluidity (0.2 to 1.0)
-  minuteStyle: 'match-hour', // 'match-hour' (exact clock-sync matching hour hand), 'interval-5m', 'interval-15m', 'smooth-paced'
-  minuteSpeed: 1.0,         // Visual rolling speed for minutes (0.25 to 2.5)
+  smoothness: 1.0,          // S-curve rollover fluidity (0.2 to 1.0)
+  minuteStyle: 'interval-15m', // 'match-hour', 'interval-5m', 'interval-15m', 'smooth-paced'
+  minuteSpeed: 0.75,        // Visual rolling speed for minutes (0.25 to 2.5)
   motionBlur: true,         // Shutter blur for rapid rolling
   timeFormat: '24h',
   showSeconds: false,
@@ -93,10 +93,10 @@ const DEFAULT_STATE = {
   offsetY: 0,
 
   // Timeline Mode & Keyframe Beat Stops (Vlog Chapters)
-  timelineMode: 'continuous', // 'continuous' or 'keyframes'
+  timelineMode: 'keyframes', // 'continuous' or 'keyframes'
   keyframeTransitionDuration: 1.0, // seconds for smooth roll
   keyframeTransitionPlacement: 'arrive', // 'arrive' (rolls before beat), 'centered', 'depart'
-  keyframeSpinDynamic: 'kinetic', // 'kinetic' (matches hours), 'whir' (+1 lap), 'direct'
+  keyframeSpinDynamic: 'direct', // 'kinetic' (matches hours), 'whir' (+1 lap), 'direct'
   minuteCadence: 'quarters', // 'quarters' (00, 15, 30, 45), 'tens', 'fives', 'targets-only', 'all', 'custom'
   customMilestones: '0, 15, 30, 45',
   keyframes: [
@@ -110,27 +110,99 @@ const DEFAULT_STATE = {
     },
     {
       id: 'kf_2',
-      videoTimeStr: '00:04.00',
-      videoTimeSec: 4.0,
-      hour: 9,
-      minute: 30,
-      tagline: 'GYM TIME'
+      videoTimeStr: '00:03.11',
+      videoTimeSec: 3.18,
+      hour: 7,
+      minute: 15,
+      tagline: 'GUM'
     },
     {
       id: 'kf_3',
-      videoTimeStr: '00:08.30',
-      videoTimeSec: 8.5,
-      hour: 13,
-      minute: 15,
-      tagline: 'LUNCH BREAK'
+      videoTimeStr: '00:04.48',
+      videoTimeSec: 4.80,
+      hour: 7,
+      minute: 30,
+      tagline: ''
     },
     {
       id: 'kf_4',
-      videoTimeStr: '00:13.00',
-      videoTimeSec: 13.0,
-      hour: 22,
-      minute: 45,
-      tagline: 'GOOD NIGHT'
+      videoTimeStr: '00:09.42',
+      videoTimeSec: 9.68,
+      hour: 7,
+      minute: 50,
+      tagline: ''
+    },
+    {
+      id: 'kf_5',
+      videoTimeStr: '00:12.21',
+      videoTimeSec: 12.33,
+      hour: 8,
+      minute: 0,
+      tagline: ''
+    },
+    {
+      id: 'kf_6',
+      videoTimeStr: '00:14.44',
+      videoTimeSec: 14.73,
+      hour: 12,
+      minute: 30,
+      tagline: ''
+    },
+    {
+      id: 'kf_7',
+      videoTimeStr: '00:16.57',
+      videoTimeSec: 16.93,
+      hour: 13,
+      minute: 15,
+      tagline: ''
+    },
+    {
+      id: 'kf_8',
+      videoTimeStr: '00:19.11',
+      videoTimeSec: 19.17,
+      hour: 13,
+      minute: 30,
+      tagline: ''
+    },
+    {
+      id: 'kf_9',
+      videoTimeStr: '00:22.08',
+      videoTimeSec: 22.12,
+      hour: 18,
+      minute: 0,
+      tagline: ''
+    },
+    {
+      id: 'kf_10',
+      videoTimeStr: '00:23.30',
+      videoTimeSec: 23.48,
+      hour: 18,
+      minute: 30,
+      tagline: ''
+    },
+    {
+      id: 'kf_11',
+      videoTimeStr: '00:26.15',
+      videoTimeSec: 26.23,
+      hour: 19,
+      minute: 30,
+      tagline: ''
+    },
+    {
+      id: 'kf_12',
+      videoTimeStr: '00:28.04',
+      videoTimeSec: 28.05,
+      hour: 21,
+      minute: 0,
+      tagline: ''
+    },
+    {
+      id: 'kf_13',
+      videoTimeStr: '00:32.20',
+      videoTimeSec: 32.32,
+      hour: 23,
+      minute: 11,
+      tagline: ''
     }
   ],
 
@@ -272,8 +344,14 @@ function loadPersistedState() {
     if (raw) {
       const parsed = JSON.parse(raw);
       Object.assign(state, parsed);
-      if (!Array.isArray(state.keyframes) || state.keyframes.length === 0) {
+      if (!Array.isArray(state.keyframes) || state.keyframes.length <= 4) {
         state.keyframes = JSON.parse(JSON.stringify(DEFAULT_STATE.keyframes));
+        state.duration = DEFAULT_STATE.duration;
+        state.timelineMode = DEFAULT_STATE.timelineMode;
+        state.keyframeSpinDynamic = DEFAULT_STATE.keyframeSpinDynamic;
+        state.minuteStyle = DEFAULT_STATE.minuteStyle;
+        state.minuteSpeed = DEFAULT_STATE.minuteSpeed;
+        state.smoothness = DEFAULT_STATE.smoothness;
       }
       if (!state.timelineMode) {
         state.timelineMode = 'continuous';
@@ -1238,19 +1316,23 @@ function setupEventListeners() {
   const btnTplDiml = document.getElementById('btn-template-diml');
   if (btnTplDiml) {
     btnTplDiml.addEventListener('click', () => {
-      const dur = state.duration;
-      state.keyframes = [
-        { id: 'kf_' + Date.now() + '_1', videoTimeSec: 0, videoTimeStr: secondsToTimecode(0, state.fps), hour: 6, minute: 30, tagline: 'WAKE UP' },
-        { id: 'kf_' + Date.now() + '_2', videoTimeSec: dur * 0.25, videoTimeStr: secondsToTimecode(dur * 0.25, state.fps), hour: 9, minute: 0, tagline: 'WORKOUT' },
-        { id: 'kf_' + Date.now() + '_3', videoTimeSec: dur * 0.50, videoTimeStr: secondsToTimecode(dur * 0.50, state.fps), hour: 13, minute: 15, tagline: 'LUNCH' },
-        { id: 'kf_' + Date.now() + '_4', videoTimeSec: dur * 0.75, videoTimeStr: secondsToTimecode(dur * 0.75, state.fps), hour: 18, minute: 45, tagline: 'SUNSET' },
-        { id: 'kf_' + Date.now() + '_5', videoTimeSec: dur, videoTimeStr: secondsToTimecode(dur, state.fps), hour: 23, minute: 0, tagline: 'NIGHT ROUTINE' }
-      ];
+      state.duration = 36.0;
+      state.timelineMode = 'keyframes';
+      state.keyframeTransitionDuration = 1.0;
+      state.keyframeTransitionPlacement = 'arrive';
+      state.keyframeSpinDynamic = 'direct';
+      state.minuteCadence = 'quarters';
+      state.minuteStyle = 'interval-15m';
+      state.minuteSpeed = 0.75;
+      state.smoothness = 1.0;
+      state.keyframes = JSON.parse(JSON.stringify(DEFAULT_STATE.keyframes));
+      syncInputsWithState();
       renderKeyframeItems();
       renderTimelineKeyframePins();
       updateTimelineUI();
       persistCurrentState();
       renderCurrentFrame();
+      showToast('Loaded 13-Beat Day in My Life Storyboard!', 'success');
     });
   }
 
