@@ -349,7 +349,7 @@ export class OdometerRenderer {
       });
 
       // Tagline
-      const hasTag = (taglineAnim && (taglineAnim.currentText || taglineAnim.nextText)) || (activeTaglineText && activeTaglineText.trim().length > 0);
+      const hasTag = (taglineAnim && ((taglineAnim.currentText && taglineAnim.currentText.trim().length > 0) || (taglineAnim.nextText && taglineAnim.nextText.trim().length > 0))) || (activeTaglineText && activeTaglineText.trim().length > 0);
       if (hasTag) {
         this.drawTagline({
           ctx,
@@ -537,7 +537,7 @@ export class OdometerRenderer {
         textColor
       });
 
-      const hasTagSplit = (taglineAnim && (taglineAnim.currentText || taglineAnim.nextText)) || (activeTaglineText && activeTaglineText.trim().length > 0);
+      const hasTagSplit = (taglineAnim && ((taglineAnim.currentText && taglineAnim.currentText.trim().length > 0) || (taglineAnim.nextText && taglineAnim.nextText.trim().length > 0))) || (activeTaglineText && activeTaglineText.trim().length > 0);
       if (hasTagSplit) {
         this.drawTagline({
           ctx,
@@ -712,6 +712,12 @@ export class OdometerRenderer {
           .sort((a, b) => a.videoTimeSec - b.videoTimeSec)
       : [];
 
+    const getKfTag = (kf) => {
+      if (!kf) return '';
+      if (typeof kf.tagline === 'string') return kf.tagline;
+      return (tagline !== undefined && tagline !== null) ? tagline : '';
+    };
+
     if (sorted.length === 0) {
       return {
         hourVal: 0,
@@ -746,15 +752,16 @@ export class OdometerRenderer {
           frac: 0
         };
       }
+      const singleTag = getKfTag(kf);
       return {
         hourVal: (timeFormat === '12h' ? displayHour : hour),
         minVal: minute,
         secVal: 0,
         minCustomPair,
-        activeTagline: kf.tagline || tagline,
+        activeTagline: singleTag,
         taglineAnim: {
-          currentText: kf.tagline || tagline,
-          nextText: kf.tagline || tagline,
+          currentText: singleTag,
+          nextText: singleTag,
           frac: 0,
           isSame: true
         },
@@ -815,7 +822,7 @@ export class OdometerRenderer {
       if (currentVideoSec < transStart) {
         activeHour = kA.hour || 0;
         activeMin = kA.minute || 0;
-        activeTag = kA.tagline || tagline;
+        activeTag = getKfTag(kA);
         taglineAnim = {
           currentText: activeTag,
           nextText: activeTag,
@@ -926,8 +933,8 @@ export class OdometerRenderer {
           }
         }
 
-        const tagA = (kA.tagline !== undefined && kA.tagline !== null) ? kA.tagline : tagline;
-        const tagB = (kB.tagline !== undefined && kB.tagline !== null) ? kB.tagline : tagline;
+        const tagA = getKfTag(kA);
+        const tagB = getKfTag(kB);
         const isTagSame = (tagA.trim().toUpperCase() === tagB.trim().toUpperCase());
 
         activeTag = (u < 0.5) ? tagA : tagB;
@@ -949,7 +956,7 @@ export class OdometerRenderer {
       const kLast = sorted[sorted.length - 1];
       activeHour = kLast.hour || 0;
       activeMin = kLast.minute || 0;
-      activeTag = kLast.tagline || tagline;
+      activeTag = getKfTag(kLast);
       taglineAnim = {
         currentText: activeTag,
         nextText: activeTag,
@@ -1678,8 +1685,16 @@ export class OdometerRenderer {
     motionBlur = true
   }) {
     const isAnim = taglineAnim && !taglineAnim.isSame && taglineAnimStyle !== 'static';
-    const curText = (taglineAnim && taglineAnim.currentText ? taglineAnim.currentText : text).trim().toUpperCase();
-    const nextText = (taglineAnim && taglineAnim.nextText ? taglineAnim.nextText : curText).trim().toUpperCase();
+
+    const rawCur = (taglineAnim && taglineAnim.currentText !== undefined && taglineAnim.currentText !== null)
+      ? taglineAnim.currentText
+      : (text || '');
+    const rawNext = (taglineAnim && taglineAnim.nextText !== undefined && taglineAnim.nextText !== null)
+      ? taglineAnim.nextText
+      : (isAnim ? '' : rawCur);
+
+    const curText = (rawCur || '').trim().toUpperCase();
+    const nextText = (rawNext || '').trim().toUpperCase();
 
     if (!curText && !nextText) return;
 
@@ -1773,20 +1788,15 @@ export class OdometerRenderer {
 
         // Motion blur pass for quick snaps
         if (motionBlur && frac > 0.08 && frac < 0.92) {
-          renderTextLine(curText, y1, alpha1 * 0.35, scale1, -2);
-          renderTextLine(curText, y1, alpha1 * 0.35, scale1, 2);
-          renderTextLine(nextText, y2, alpha2 * 0.35, scale2, -2);
-          renderTextLine(nextText, y2, alpha2 * 0.35, scale2, 2);
+          if (curText) {
+            renderTextLine(curText, y1, alpha1 * 0.35, scale1, -2);
+            renderTextLine(curText, y1, alpha1 * 0.35, scale1, 2);
+          }
+          if (nextText) {
+            renderTextLine(nextText, y2, alpha2 * 0.35, scale2, -2);
+            renderTextLine(nextText, y2, alpha2 * 0.35, scale2, 2);
+          }
         }
-
-        // Drum barrel top & bottom soft vignette
-        const grad = ctx.createLinearGradient(0, cy - slotHeight / 2 - 4, 0, cy + slotHeight / 2 + 4);
-        grad.addColorStop(0, 'rgba(0, 0, 0, 0.7)');
-        grad.addColorStop(0.2, 'rgba(0, 0, 0, 0)');
-        grad.addColorStop(0.8, 'rgba(0, 0, 0, 0)');
-        grad.addColorStop(1, 'rgba(0, 0, 0, 0.7)');
-        ctx.fillStyle = grad;
-        ctx.fillRect(-clipWidth / 2, cy - slotHeight / 2 - 8, clipWidth, slotHeight + 16);
       }
 
       ctx.restore(); // restore clip
