@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reel Odometer Timer — Day in My Life Video Generator</title>
+  <meta name="description" content="Generate smooth rolling odometer 00:00 to 23:59 timer animations for Day in My Life reels. Customize neon glow, clean and broad fonts, negative spacing, and export up to 5min MP4 video." />
+
+  <!-- Google Fonts: Broad, Clean, Rounded, Modern & Cyberpunk -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Chivo+Mono:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@700&family=Comfortaa:wght@700&family=Inter:wght@400;500;600;700&family=Kanit:wght@700;800&family=Lexend+Mega:wght@700;800&family=Montserrat:wght@700;900&family=Orbitron:wght@500;700;900&family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@700;800&family=Righteous&family=Rubik+Glitch&family=Share+Tech+Mono&family=Space+Grotesk:wght@600;700&family=Syne:wght@700;800&family=Unbounded:wght@600;700;800;900&family=VT323&display=swap" rel="stylesheet" />
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏱️</text></svg>" />
+  <link rel="stylesheet" href="./index.css" />
+</head>
+<body class="dark-theme">
+  <!-- Hidden Font Preloaders for Canvas Readiness -->
+  <span style="font-family: 'Holly Berry Pop'; position: absolute; left: -9999px; opacity: 0; pointer-events: none;" aria-hidden="true">0123456789:AMPMSample</span>
+  <span style="font-family: 'HollyBerryPop'; position: absolute; left: -9999px; opacity: 0; pointer-events: none;" aria-hidden="true">0123456789:AMPMSample</span>
+
+  <!-- Top Application Bar -->
+  <header class="app-header" id="app-header">
+    <div class="header-left">
+      <div class="logo-badge">
+        <span class="logo-icon">⏱️</span>
+        <div class="logo-text">
+          <h1 class="app-title">CHRONO // REEL</h1>
+          <span class="app-subtitle">Day in My Life Odometer Video Studio</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Presets Carousel in Header -->
+    <div class="header-presets" id="header-presets-bar">
+      <span class="presets-label">⚡ Presets:</span>
+      <div class="preset-pill-group" id="preset-buttons-container">
+        <!-- Rendered dynamically by main.js with built-in and user saved presets -->
+      </div>
+      <button type="button" class="btn-preset-action" id="btn-save-current-preset" title="Save current settings as a custom preset">
+        <span>+</span> Save As Preset
+      </button>
+      <button type="button" class="btn-preset-action" id="btn-export-preset-file" title="Export preset as a downloadable file to continue on phone">
+        <span>💾</span> Export File
+      </button>
+      <button type="button" class="btn-preset-action" id="btn-import-preset-file" title="Load preset file (.json / .crpreset) from phone or PC">
+        <span>📁</span> Import File
+      </button>
+      <input type="file" id="input-preset-file" accept=".json,.crpreset,application/json" style="display:none" />
+    </div>
+
+    <div class="header-right">
+      <div class="aspect-selector" id="aspect-selector-group">
+        <button type="button" class="aspect-btn active" data-aspect="9:16" id="aspect-9-16-btn" title="Vertical 9:16 (Reels / TikTok / Shorts)">
+          <span class="aspect-icon">📱</span> 9:16 Reel
+        </button>
+        <button type="button" class="aspect-btn" data-aspect="1:1" id="aspect-1-1-btn" title="Square 1:1 (Instagram Feed)">
+          <span class="aspect-icon">⬛</span> 1:1
+        </button>
+        <button type="button" class="aspect-btn" data-aspect="16:9" id="aspect-16-9-btn" title="Landscape 16:9 (YouTube)">
+          <span class="aspect-icon">🖥️</span> 16:9
+        </button>
+      </div>
+
+      <button type="button" class="btn btn-primary btn-glow" id="header-export-btn">
+        <span class="btn-icon">⚡</span> Export MP4
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Studio Workspace -->
+  <main class="studio-main">
+    <!-- Center / Left Canvas Viewport -->
+    <section class="preview-area" aria-label="Live Video Preview">
+      <!-- Viewport Toolbar -->
+      <div class="viewport-toolbar">
+        <div class="toolbar-left">
+          <span class="live-indicator"><span class="live-dot"></span> LIVE CANVAS PREVIEW</span>
+          <span class="resolution-badge" id="resolution-label">1080 × 1920 (9:16 HD)</span>
+          <span class="storage-badge" id="storage-status-badge" title="Settings auto-saved to browser storage">💾 Auto-Saved</span>
+        </div>
+        <div class="toolbar-right">
+          <button type="button" class="tool-btn" id="btn-toggle-grid" title="Toggle Safe Zone Overlay">Safe Zone</button>
+          <button type="button" class="tool-btn" id="btn-reset-defaults" title="Reset all settings to default">Reset Defaults</button>
+        </div>
+      </div>
+
+      <!-- Canvas Frame Container -->
+      <div class="canvas-viewport" id="canvas-viewport">
+        <div class="canvas-stage-wrapper" id="canvas-stage-wrapper">
+          <!-- Live Canvas -->
+          <canvas id="timer-canvas" width="1080" height="1920"></canvas>
+          <!-- Reel Safe Zone Overlay Guide (hidden by default) -->
+          <div class="safe-zone-overlay" id="safe-zone-overlay">
+            <div class="safe-zone-header">Instagram / TikTok Safe Zone</div>
+            <div class="safe-zone-center-cross"></div>
+            <div class="safe-zone-footer">Captions & Audio Area</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline & Playback Control Bar -->
+      <div class="timeline-bar" id="timeline-bar">
+        <div class="playback-controls">
+          <button type="button" class="ctrl-btn play-btn" id="btn-play-pause" title="Play / Pause Animation (Space)">
+            <span class="ctrl-icon" id="play-pause-icon">▶</span>
+          </button>
+          <button type="button" class="ctrl-btn" id="btn-restart" title="Restart to 00:00">
+            <span class="ctrl-icon">⏮</span>
+          </button>
+          <div class="time-readout">
+            <span class="current-time-badge" id="timeline-time-display">00:00</span>
+            <span class="time-sep">/</span>
+            <span class="target-time-badge" id="timeline-end-display">23:59</span>
+            <span class="timecode-badge" id="timeline-timecode-display" title="Video Time (Min:Sec.Frames)">00:00.01</span>
+          </div>
+        </div>
+
+        <!-- Interactive Progress Scrubber -->
+        <div class="scrubber-wrapper">
+          <input type="range" class="scrubber-slider" id="timeline-slider" min="0" max="1000" value="0" step="1" aria-label="Video Timeline Scrubber" />
+          <div class="scrubber-track-glow" id="scrubber-track-glow"></div>
+          <div class="keyframe-diamond-track" id="timeline-keyframe-pins" title="Keyframe Beat Markers"></div>
+        </div>
+
+        <div class="playback-meta">
+          <div class="speed-selector" id="speed-selector">
+            <button type="button" class="speed-btn" data-speed="0.5">0.5×</button>
+            <button type="button" class="speed-btn active" data-speed="1">1×</button>
+            <button type="button" class="speed-btn" data-speed="2">2×</button>
+          </div>
+          <button type="button" class="loop-btn active" id="btn-loop-toggle" title="Loop Playback">
+            🔁 Loop
+          </button>
+          <span class="duration-badge" id="duration-meta-badge">5.0s @ 60 FPS</span>
+        </div>
+      </div>
+
+      <!-- Helpful Overlay Tip for Creators -->
+      <div class="reel-tip-banner">
+        <span class="tip-icon">💡</span>
+        <div class="tip-content">
+          <strong>Pro-Tip for Reels & TikTok:</strong>
+          <span>Export as <strong>MP4 Green Screen</strong> for 1-click chroma key removal in CapCut/Premiere, or <strong>Black Background</strong> with <em>Screen / Add</em> blend mode!</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Customization Controls Sidebar -->
+    <aside class="sidebar-controls" aria-label="Odometer Settings">
+      <!-- Tabs Navigation -->
+      <nav class="sidebar-tabs" id="sidebar-tabs-nav" role="tablist">
+        <button type="button" class="tab-btn active" data-tab="tab-motion" id="tab-btn-motion" role="tab">⏱️ Motion</button>
+        <button type="button" class="tab-btn" data-tab="tab-neon" id="tab-btn-neon" role="tab">✨ Neon</button>
+        <button type="button" class="tab-btn" data-tab="tab-font" id="tab-btn-font" role="tab">🔤 Font</button>
+        <button type="button" class="tab-btn" data-tab="tab-bg" id="tab-btn-bg" role="tab">🎨 Backdrop</button>
+        <button type="button" class="tab-btn" data-tab="tab-export" id="tab-btn-export" role="tab">🚀 Export</button>
+      </nav>
+
+      <div class="tab-content-container">
+        <!-- =================== TAB 1: MOTION & TIME =================== -->
+        <section class="tab-panel active" id="tab-motion" role="tabpanel">
+          <!-- Animation Mode Switcher -->
+          <div class="control-card mode-switch-card">
+            <label class="sub-label" style="margin-bottom: 8px;">🎬 Timeline Animation Mode:</label>
+            <div class="mode-toggle-group">
+              <button type="button" class="mode-toggle-btn active" data-mode="continuous" id="btn-mode-continuous">
+                <span class="mode-btn-icon">⏱️</span>
+                <div class="mode-btn-text">
+                  <strong>Continuous Flow</strong>
+                  <span>Rolls 00:00 to 23:59 steadily</span>
+                </div>
+              </button>
+              <button type="button" class="mode-toggle-btn" data-mode="keyframes" id="btn-mode-keyframes">
+                <span class="mode-btn-icon">🎬</span>
+                <div class="mode-btn-text">
+                  <strong>Keyframe Stops (Vlog Beats)</strong>
+                  <span>Stops at your timestamps & flips smoothly</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Card 1A: Continuous Time Range (Shown when Mode is continuous) -->
+          <div class="control-card" id="card-continuous-time-range">
+            <h3 class="card-title">⏱️ Time Range (Day in My Life)</h3>
+            <p class="card-desc">Set your reel start and end time. Digits roll smoothly across this window.</p>
+
+            <div class="input-row-2">
+              <div class="input-field">
+                <label for="input-start-time">Start Time</label>
+                <input type="time" id="input-start-time" value="00:00" class="styled-input" />
+              </div>
+              <div class="input-field">
+                <label for="input-end-time">End Time</label>
+                <input type="time" id="input-end-time" value="23:59" class="styled-input" />
+              </div>
+            </div>
+
+            <!-- Quick Time Presets -->
+            <div class="quick-chips">
+              <button type="button" class="chip-btn active" data-range="00:00-23:59">Full Day (00:00 - 23:59)</button>
+              <button type="button" class="chip-btn" data-range="06:00-22:00">Wake to Sleep (06:00 - 22:00)</button>
+              <button type="button" class="chip-btn" data-range="09:00-17:00">Workday (09:00 - 17:00)</button>
+              <button type="button" class="chip-btn" data-range="18:00-02:00">Night Out (18:00 - 02:00)</button>
+            </div>
+          </div>
+
+          <!-- Card 1B: Keyframe Stops Manager (Shown when Mode is keyframes) -->
+          <div class="control-card" id="card-keyframes-manager" style="display: none;">
+            <div class="card-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <h3 class="card-title" style="margin-bottom: 0;">🎬 Keyframe Beat Stops (Vlog Chapters)</h3>
+              <span class="storage-badge" style="background: rgba(255, 0, 127, 0.15); border-color: rgba(255, 0, 127, 0.4); color: #FF007F;">Storyboard Mode</span>
+            </div>
+            <p class="card-desc">The timer holds steadily at each of your scene times and smoothly flips to the next time across video timestamps.</p>
+
+            <!-- Quick Template Beats -->
+            <div class="quick-templates-box" style="margin-top: 10px; margin-bottom: 14px;">
+              <span class="sub-label">⚡ Quick Vlog Storyboard Templates:</span>
+              <div class="quick-chips" style="margin-top: 6px;">
+                <button type="button" class="chip-btn" id="btn-template-diml">☕ 5-Beat Day In My Life</button>
+                <button type="button" class="chip-btn" id="btn-template-quick">⚡ 3-Beat Quick Reel</button>
+                <button type="button" class="chip-btn" id="btn-template-travel">✈️ Travel Vlog</button>
+              </div>
+            </div>
+
+            <!-- Transition Dynamics for Keyframes -->
+            <div class="kf-transition-box" style="background: rgba(0, 245, 255, 0.05); padding: 12px; border-radius: 10px; border: 1px solid rgba(0, 245, 255, 0.18); margin-bottom: 14px;">
+              <div class="slider-header">
+                <label for="slider-kf-trans-duration">Flip / Roll Transition Duration</label>
+                <span class="slider-value" id="val-kf-trans-duration">1.0s (Smooth)</span>
+              </div>
+              <input type="range" id="slider-kf-trans-duration" min="0.4" max="3.0" step="0.1" value="1.0" class="styled-slider" />
+              <p class="card-desc" style="margin-top: 4px;">Controls how many seconds the odometer spends smoothly spinning into each time before freezing on it.</p>
+
+              <div class="input-row-2" style="margin-top: 10px;">
+                <div class="input-field">
+                  <label for="select-kf-trans-placement">Transition Timing</label>
+                  <select id="select-kf-trans-placement" class="styled-select">
+                    <option value="arrive" selected>Arrive at Timestamp (Recommended for Cuts)</option>
+                    <option value="centered">Centered (Half Before / Half After)</option>
+                    <option value="depart">Depart from Timestamp</option>
+                  </select>
+                </div>
+                <div class="input-field">
+                  <label for="select-kf-spin-dynamic">Spin Dynamic</label>
+                  <select id="select-kf-spin-dynamic" class="styled-select">
+                    <option value="kinetic" selected>Kinetic Clock Distance (Smooth)</option>
+                    <option value="whir">Vlog Whir (+1 Energetic Lap)</option>
+                    <option value="direct">Direct Shortest Flip</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Minute Roll Cadence & Milestone Steps -->
+              <div class="input-field" style="margin-top: 10px;">
+                <label for="select-kf-minute-cadence">⏱️ Minute Roll Cadence (Milestone Steps)</label>
+                <select id="select-kf-minute-cadence" class="styled-select">
+                  <option value="quarters" selected>✨ 15-Minute Quarters (00, 15, 30, 45) — Recommended</option>
+                  <option value="tens">⏱️ 10-Minute Steps (00, 10, 20, 30, 40, 50)</option>
+                  <option value="fives">⏱️ 5-Minute Ticks (00, 05, 10, 15... 55)</option>
+                  <option value="targets-only">🎯 Keyframe Targets Only (Direct Flip, No In-Between Mins)</option>
+                  <option value="all">🔢 Every Minute (00..59 — Full Continuous Wheel)</option>
+                  <option value="custom">✏️ Custom Minute Steps...</option>
+                </select>
+                <p class="card-desc" style="margin-top: 4px;">Instead of spinning through all 60 numbers, the wheel flips only between these milestones (plus your exact keyframe times). Makes motion punchy, readable, and butter-smooth!</p>
+              </div>
+
+              <div class="input-field" id="custom-milestones-container" style="display: none; margin-top: 8px;">
+                <label for="input-custom-milestones">Custom Minute Milestones (Comma separated)</label>
+                <input type="text" id="input-custom-milestones" class="styled-input" value="0, 15, 30, 45" placeholder="e.g. 0, 15, 30, 45 or 0, 20, 40" />
+              </div>
+            </div>
+
+            <!-- Keyframe Beats Items List (Rendered dynamically) -->
+            <div class="kf-list-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span class="sub-label">📍 Configured Beat Stops:</span>
+              <button type="button" class="btn-preset-action" id="btn-sort-keyframes" title="Sort beats by video timestamp" style="font-size: 11px; padding: 4px 8px;">
+                ↕ Sort by Time
+              </button>
+            </div>
+
+            <div class="keyframe-items-container" id="keyframe-items-container">
+              <!-- Dynamically populated by main.js -->
+            </div>
+
+            <button type="button" class="btn btn-secondary" id="btn-add-keyframe" style="width: 100%; margin-top: 12px;">
+              <span>+</span> Add Keyframe Beat
+            </button>
+          </div>
+
+          <div class="control-card">
+            <h3 class="card-title">🎬 Video Duration (Up to 5 Minutes)</h3>
+            <p class="card-desc">Longer durations give even more butter-smooth transitions and paced montages.</p>
+            <div class="slider-header">
+              <label for="slider-duration">Reel Clip Length</label>
+              <span class="slider-value" id="val-duration">5.0 seconds</span>
+            </div>
+            <input type="range" id="slider-duration" min="1" max="300" step="0.5" value="5" class="styled-slider" />
+            <div class="quick-chips">
+              <button type="button" class="chip-btn" data-duration="3">3s</button>
+              <button type="button" class="chip-btn active" data-duration="5">5s (Standard)</button>
+              <button type="button" class="chip-btn" data-duration="10">10s</button>
+              <button type="button" class="chip-btn" data-duration="15">15s</button>
+              <button type="button" class="chip-btn" data-duration="30">30s</button>
+              <button type="button" class="chip-btn" data-duration="60">1m (60s)</button>
+              <button type="button" class="chip-btn" data-duration="120">2m (120s)</button>
+              <button type="button" class="chip-btn" data-duration="300">5m (300s)</button>
+            </div>
+          </div>
+
+          <div class="control-card">
+            <h3 class="card-title">⚙️ Smooth Turning & Dynamics</h3>
+
+            <div class="input-field">
+              <label for="select-digit-grouping">Digit Display Style (Hours & Minutes)</label>
+              <select id="select-digit-grouping" class="styled-select">
+                <option value="paired" selected>✨ 2-Digit Paired Drums (00..23 : 00..59) — Recommended</option>
+                <option value="split">⚙️ 4-Column Split Single Wheels (0..2 0..9 : 0..5 0..9)</option>
+              </select>
+            </div>
+
+            <div class="input-field" style="margin-top: 10px;">
+              <label for="select-roll-mode">Rolling Motion Dynamics</label>
+              <select id="select-roll-mode" class="styled-select">
+                <option value="ultra-smooth" selected>⚡ Ultra-Smooth Reel Flow (Screen-Time Normalized — No Snapping)</option>
+                <option value="continuous">⚙️ Mechanical Cascading (Traditional Clock-Time Gears)</option>
+                <option value="glide">🌊 Harmonic Continuous Stream (Linear Flow)</option>
+              </select>
+            </div>
+
+            <!-- Minute Movement Cadence & Slower Speed Controls -->
+            <div class="input-field" style="margin-top: 12px; background: rgba(0, 245, 255, 0.05); padding: 12px; border-radius: 10px; border: 1px solid rgba(0, 245, 255, 0.18);">
+              <label for="select-minute-style">⏱️ Minute Roll Pacing & Cadence</label>
+              <select id="select-minute-style" class="styled-select" style="margin-bottom: 8px;">
+                <option value="match-hour" selected>⏱️ Match Hour Hand Pace (Exact Clock Sync — 60m / Hour)</option>
+                <option value="interval-5m">⏱️ 5-Minute Vlog Ticks (00, 05, 10, 15... in sync)</option>
+                <option value="interval-15m">🕒 15-Minute Quarter Beats (00, 15, 30, 45 in sync)</option>
+                <option value="smooth-paced">✨ Relaxed Aesthetic Pacing (Calibrated Speed)</option>
+              </select>
+              
+              <div class="slider-header">
+                <label for="slider-minute-speed">Minute Visual Speed</label>
+                <span class="slider-value" id="val-minute-speed">1.0× (Cinematic Smooth)</span>
+              </div>
+              <input type="range" id="slider-minute-speed" min="0.25" max="2.5" step="0.25" value="1.0" class="styled-slider" />
+              <p class="card-desc" style="margin-top: 4px;">Slows down the minutes drum to a fluid, readable pace so numbers glide smoothly without manic jumping or rigidity.</p>
+              <div class="quick-chips" style="margin-top: 6px;">
+                <button type="button" class="chip-btn" data-minspeed="0.5">0.5× (Ultra Slow & Chill)</button>
+                <button type="button" class="chip-btn active" data-minspeed="1.0">1.0× (Smooth Default)</button>
+                <button type="button" class="chip-btn" data-minspeed="1.75">1.75× (Brisk Flow)</button>
+              </div>
+            </div>
+
+            <div class="slider-header" style="margin-top: 12px;">
+              <label for="slider-smoothness">Rollover Smoothness (S-Curve)</label>
+              <span class="slider-value" id="val-smoothness">0.85 (Butter Smooth)</span>
+            </div>
+            <input type="range" id="slider-smoothness" min="0.2" max="1.0" step="0.05" value="0.85" class="styled-slider" />
+            <p class="card-desc" style="margin-top: 4px;">Quintic S-curve easing ensures numbers glide into place without sudden rigid jerks or confusing tens jumps, even in fast 5s–10s clips.</p>
+
+            <div class="checkbox-row" style="margin-top: 10px;">
+              <label class="toggle-switch">
+                <input type="checkbox" id="check-motion-blur" checked />
+                <span class="toggle-slider"></span>
+              </label>
+              <div class="toggle-label">
+                <strong>High-Speed Motion Blur</strong>
+                <span>Adds natural shutter motion blur when digits spin quickly</span>
+              </div>
+            </div>
+
+            <div class="input-field" style="margin-top: 12px;">
+              <label for="select-time-format">Time Format</label>
+              <select id="select-time-format" class="styled-select">
+                <option value="24h" selected>24-Hour (00:00 - 23:59)</option>
+                <option value="12h">12-Hour with AM / PM</option>
+              </select>
+            </div>
+
+            <div class="checkbox-row">
+              <label class="toggle-switch">
+                <input type="checkbox" id="check-show-seconds" />
+                <span class="toggle-slider"></span>
+              </label>
+              <div class="toggle-label">
+                <strong>Show Seconds Drum (HH:MM:SS)</strong>
+                <span>Adds spinning seconds wheels for dynamic reel energy</span>
+              </div>
+            </div>
+
+            <!-- Seconds Speed Control (Smooth & Slow Pacing) -->
+            <div id="seconds-speed-container" style="display: none; margin-top: 10px; background: rgba(0, 245, 255, 0.05); padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(0, 245, 255, 0.15);">
+              <div class="slider-header">
+                <label for="slider-seconds-speed">Seconds Movement Speed</label>
+                <span class="slider-value" id="val-seconds-speed">1.0× (Cinematic Smooth)</span>
+              </div>
+              <input type="range" id="slider-seconds-speed" min="0.25" max="3.0" step="0.25" value="1.0" class="styled-slider" />
+              <p class="card-desc" style="margin-top: 4px;">Controls the visual roll speed of the seconds drum so it stays calm, readable, and buttery-smooth rather than flashing frantically.</p>
+              <div class="quick-chips" style="margin-top: 6px;">
+                <button type="button" class="chip-btn" data-secspeed="0.5">0.5× (Slow & Relaxed)</button>
+                <button type="button" class="chip-btn active" data-secspeed="1.0">1.0× (Cinematic)</button>
+                <button type="button" class="chip-btn" data-secspeed="2.0">2.0× (Brisk Beat)</button>
+              </div>
+            </div>
+
+            <div class="input-field" style="margin-top: 14px;">
+              <label for="select-colon-style">Colon Separator Animation</label>
+              <select id="select-colon-style" class="styled-select">
+                <option value="pulse" selected>Smooth Glow Pulse</option>
+                <option value="steady">Steady Solid</option>
+                <option value="blink">Retro 1Hz Blink</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="control-card">
+            <h3 class="card-title">🏷️ Tagline & Progress Bar</h3>
+            <div class="input-field">
+              <label for="input-tagline">Header Badge / Title</label>
+              <input type="text" id="input-tagline" value="DAY IN MY LIFE" placeholder="e.g. DAY IN MY LIFE, TOKYO TRIP, 24 HOURS" class="styled-input" />
+            </div>
+
+            <div class="checkbox-row" style="margin-top: 12px;">
+              <label class="toggle-switch">
+                <input type="checkbox" id="check-progress-bar" checked />
+                <span class="toggle-slider"></span>
+              </label>
+              <div class="toggle-label">
+                <strong>Show Day Progress Bar</strong>
+                <span>Glowing micro-indicator below the clock showing 0% to 100% completion</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- =================== TAB 2: NEON & GLOW =================== -->
+        <section class="tab-panel" id="tab-neon" role="tabpanel">
+          <div class="control-card">
+            <h3 class="card-title">✨ Neon Illumination</h3>
+            <div class="slider-header">
+              <label for="slider-glow-intensity">Glow Intensity</label>
+              <span class="slider-value" id="val-glow-intensity">0.85 (High Voltage)</span>
+            </div>
+            <input type="range" id="slider-glow-intensity" min="0" max="1.5" step="0.05" value="0.85" class="styled-slider" />
+
+            <div class="color-picker-row">
+              <div class="color-item">
+                <label for="picker-glow-color">Neon Aura Color</label>
+                <div class="picker-wrap">
+                  <input type="color" id="picker-glow-color" value="#FF007F" class="color-swatch-input" />
+                  <span class="color-hex-badge" id="badge-glow-color">#FF007F</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Neon Swatches -->
+            <label class="sub-label">Popular Reel Neon Colors:</label>
+            <div class="neon-swatches" id="neon-swatches-group">
+              <button type="button" class="swatch-btn" data-glow="#FF007F" data-text="#00F5FF" style="--swatch-glow: #FF007F; --swatch-core: #00F5FF;" title="Cyberpunk Cyan & Magenta"></button>
+              <button type="button" class="swatch-btn" data-glow="#00F5FF" data-text="#FFFFFF" style="--swatch-glow: #00F5FF; --swatch-core: #FFFFFF;" title="Electric Cyan"></button>
+              <button type="button" class="swatch-btn" data-glow="#39FF14" data-text="#39FF14" style="--swatch-glow: #39FF14; --swatch-core: #FFFFFF;" title="Acid Green"></button>
+              <button type="button" class="swatch-btn" data-glow="#FF5E00" data-text="#FFB800" style="--swatch-glow: #FF5E00; --swatch-core: #FFB800;" title="Sunset Amber"></button>
+              <button type="button" class="swatch-btn" data-glow="#9D00FF" data-text="#E0AAFF" style="--swatch-glow: #9D00FF; --swatch-core: #E0AAFF;" title="Cyber Violet"></button>
+              <button type="button" class="swatch-btn" data-glow="#FF69B4" data-text="#FFB5D7" style="--swatch-glow: #FF69B4; --swatch-core: #FFFFFF;" title="Pastel Bubblegum"></button>
+              <button type="button" class="swatch-btn" data-glow="#FFFFFF" data-text="#FFFFFF" style="--swatch-glow: #FFFFFF; --swatch-core: #FFFFFF;" title="Pure Clean White"></button>
+            </div>
+          </div>
+
+          <div class="control-card">
+            <h3 class="card-title">🌀 3D Cylindrical Drum Shading</h3>
+            <div class="checkbox-row">
+              <label class="toggle-switch">
+                <input type="checkbox" id="check-drum-shadow" checked />
+                <span class="toggle-slider"></span>
+              </label>
+              <div class="toggle-label">
+                <strong>Curved Drum Depth Vignette</strong>
+                <span>Simulates top & bottom circular cylinder curvature with soft ambient shading</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- =================== TAB 3: FONT & TYPOGRAPHY =================== -->
+        <section class="tab-panel" id="tab-font" role="tabpanel">
+          <div class="control-card">
+            <h3 class="card-title">🔤 Clean, Broad & Round Fonts</h3>
+            <p class="card-desc">Curated collection featuring modern broad, geometric, round, and editorial typography.</p>
+
+            <div class="input-field">
+              <label for="select-font-family">Font Family</label>
+              <select id="select-font-family" class="styled-select font-select">
+                <!-- Broad, Clean & Rounded Modern Fonts -->
+                <optgroup label="🌟 Modern Broad & Geometric">
+                  <option value="Unbounded">Unbounded (Ultra Wide, Bold Geometric — Top Reel Trend)</option>
+                  <option value="Syne">Syne (Ultra Broad Editorial Heavyweight)</option>
+                  <option value="Plus Jakarta Sans">Plus Jakarta Sans (Super Clean Broad Sans)</option>
+                  <option value="Kanit">Kanit (Broad Heavy Modern Condensed)</option>
+                  <option value="Lexend Mega">Lexend Mega (Extra Wide Modern Clean)</option>
+                  <option value="Space Grotesk">Space Grotesk (Tech Broad Minimalist)</option>
+                  <option value="Montserrat">Montserrat (Classic Broad Heavy)</option>
+                </optgroup>
+                <optgroup label="⭕ Smooth & Rounded">
+                  <option value="Holly Berry Pop">🍓 Holly Berry Pop (Bubbly Cute Pop — Trending)</option>
+                  <option value="Comfortaa">Comfortaa (Smooth Ultra Rounded Aesthetic)</option>
+                  <option value="Righteous">Righteous (Curved Futuristic Retro)</option>
+                  <option value="Outfit">Outfit (Clean Geometric Rounded Sans)</option>
+                </optgroup>
+                <optgroup label="⚡ Digital & Cyberpunk">
+                  <option value="Orbitron" selected>Orbitron (Cyberpunk Sci-Fi)</option>
+                  <option value="Bebas Neue">Bebas Neue (Bold Condensed Impact)</option>
+                  <option value="Share Tech Mono">Share Tech Mono (Precision Tech)</option>
+                  <option value="Chivo Mono">Chivo Mono (Editorial Monospace)</option>
+                  <option value="VT323">VT323 (Retro 80s VCR Alarm)</option>
+                  <option value="Cinzel">Cinzel (Luxury High Fashion)</option>
+                  <option value="Rubik Glitch">Rubik Glitch (Edgy TikTok Glitch)</option>
+                  <option value="Inter">Inter (Classic Minimalist)</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <div class="color-picker-row">
+              <div class="color-item">
+                <label for="picker-text-color">Font / Digit Color</label>
+                <div class="picker-wrap">
+                  <input type="color" id="picker-text-color" value="#00F5FF" class="color-swatch-input" />
+                  <span class="color-hex-badge" id="badge-text-color">#00F5FF</span>
+                </div>
+              </div>
+              <div class="color-item">
+                <label for="picker-tagline-color">Tagline Color</label>
+                <div class="picker-wrap">
+                  <input type="color" id="picker-tagline-color" value="#00F5FF" class="color-swatch-input" />
+                  <span class="color-hex-badge" id="badge-tagline-color">#00F5FF</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="slider-header" style="margin-top: 14px;">
+              <label for="slider-font-size">Font Size</label>
+              <span class="slider-value" id="val-font-size">160 px</span>
+            </div>
+            <input type="range" id="slider-font-size" min="80" max="240" step="5" value="160" class="styled-slider" />
+
+            <!-- Negative Font Spacing / Squeeze Slider -->
+            <div class="slider-header" style="margin-top: 14px;">
+              <label for="slider-digit-spacing">Digit Spacing (Negative to Squeeze Closer)</label>
+              <span class="slider-value" id="val-digit-spacing">16 px</span>
+            </div>
+            <input type="range" id="slider-digit-spacing" min="-40" max="60" step="1" value="16" class="styled-slider" />
+            <div class="quick-chips">
+              <button type="button" class="chip-btn" data-spacing="-25">Ultra Tight (-25px)</button>
+              <button type="button" class="chip-btn" data-spacing="-10">Compact (-10px)</button>
+              <button type="button" class="chip-btn active" data-spacing="16">Default (+16px)</button>
+              <button type="button" class="chip-btn" data-spacing="35">Spaced (+35px)</button>
+            </div>
+          </div>
+
+          <div class="control-card">
+            <h3 class="card-title">📐 Scale & Placement on Reel</h3>
+            <div class="slider-header">
+              <label for="slider-scale">Odometer Scale</label>
+              <span class="slider-value" id="val-scale">1.0×</span>
+            </div>
+            <input type="range" id="slider-scale" min="0.5" max="1.8" step="0.05" value="1.0" class="styled-slider" />
+
+            <div class="slider-header" style="margin-top: 14px;">
+              <label for="slider-offset-y">Vertical Offset (Y-Position)</label>
+              <span class="slider-value" id="val-offset-y">Center (0px)</span>
+            </div>
+            <input type="range" id="slider-offset-y" min="-600" max="600" step="20" value="0" class="styled-slider" />
+            <div class="quick-chips">
+              <button type="button" class="chip-btn" data-offset="-400">Top Header (-400px)</button>
+              <button type="button" class="chip-btn active" data-offset="0">Center (0px)</button>
+              <button type="button" class="chip-btn" data-offset="400">Lower Third (+400px)</button>
+            </div>
+          </div>
+
+          <!-- Tagline & Phrase Typography & Motion -->
+          <div class="control-card">
+            <div class="card-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <h3 class="card-title" style="margin-bottom: 0;">🏷️ Tagline / Phrase Typography & Motion</h3>
+              <span class="storage-badge" style="background: rgba(0, 245, 255, 0.12); border-color: rgba(0, 245, 255, 0.35); color: #00F5FF;">Whole Phrase Dial</span>
+            </div>
+            <p class="card-desc">Customize typography and rolling drum motion for the header badge and vlog scene phrases.</p>
+
+            <div class="input-field">
+              <label for="select-tagline-font-family">Phrase Font Family</label>
+              <select id="select-tagline-font-family" class="styled-select font-select">
+                <option value="" selected>✨ Match Clock Digits Font</option>
+                <optgroup label="🌟 Modern Broad & Geometric">
+                  <option value="Unbounded">Unbounded (Ultra Wide, Bold Geometric)</option>
+                  <option value="Syne">Syne (Ultra Broad Editorial Heavyweight)</option>
+                  <option value="Plus Jakarta Sans">Plus Jakarta Sans (Super Clean Broad Sans)</option>
+                  <option value="Kanit">Kanit (Broad Heavy Modern Condensed)</option>
+                  <option value="Lexend Mega">Lexend Mega (Extra Wide Modern Clean)</option>
+                  <option value="Space Grotesk">Space Grotesk (Tech Broad Minimalist)</option>
+                  <option value="Montserrat">Montserrat (Classic Broad Heavy)</option>
+                </optgroup>
+                <optgroup label="⭕ Smooth & Rounded">
+                  <option value="Holly Berry Pop">🍓 Holly Berry Pop (Bubbly Cute Pop — Trending)</option>
+                  <option value="Comfortaa">Comfortaa (Smooth Ultra Rounded Aesthetic)</option>
+                  <option value="Righteous">Righteous (Curved Futuristic Retro)</option>
+                  <option value="Outfit">Outfit (Clean Geometric Rounded Sans)</option>
+                </optgroup>
+                <optgroup label="⚡ Digital & Cyberpunk">
+                  <option value="Orbitron">Orbitron (Cyberpunk Sci-Fi)</option>
+                  <option value="Bebas Neue">Bebas Neue (Bold Condensed Impact)</option>
+                  <option value="Share Tech Mono">Share Tech Mono (Precision Tech)</option>
+                  <option value="Chivo Mono">Chivo Mono (Editorial Monospace)</option>
+                  <option value="VT323">VT323 (Retro 80s VCR Alarm)</option>
+                  <option value="Cinzel">Cinzel (Luxury High Fashion)</option>
+                  <option value="Rubik Glitch">Rubik Glitch (Edgy TikTok Glitch)</option>
+                  <option value="Inter">Inter (Classic Minimalist)</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <div class="input-row-2" style="margin-top: 12px;">
+              <div class="input-field">
+                <label for="select-tagline-anim-style">Phrase Transition Motion</label>
+                <select id="select-tagline-anim-style" class="styled-select">
+                  <option value="dial" selected>🎡 Whole-Phrase Dial Roll (Odometer Drum)</option>
+                  <option value="fade">✨ Smooth Crossfade</option>
+                  <option value="static">⏹️ Static (Instant / No Motion)</option>
+                </select>
+              </div>
+              <div class="input-field">
+                <label for="select-tagline-position">Phrase Placement</label>
+                <select id="select-tagline-position" class="styled-select">
+                  <option value="top" selected>⬆️ Top (Above Digits)</option>
+                  <option value="bottom">⬇️ Bottom (Below Digits)</option>
+                </select>
+              </div>
+            </div>
+            <p class="card-desc" style="margin-top: 4px;">In Keyframe mode, the entire phrase rolls vertically as a single drum wheel into each scene. If the text is the same across scenes, motion is zeroed out to prevent visual noise.</p>
+
+            <div class="slider-header" style="margin-top: 14px;">
+              <label for="slider-tagline-font-size">Phrase Font Size</label>
+              <span class="slider-value" id="val-tagline-font-size">28 px</span>
+            </div>
+            <input type="range" id="slider-tagline-font-size" min="14" max="64" step="1" value="28" class="styled-slider" />
+
+            <div class="slider-header" style="margin-top: 14px;">
+              <label for="slider-tagline-letter-spacing">Letter Tracking / Spacing</label>
+              <span class="slider-value" id="val-tagline-letter-spacing">4 px</span>
+            </div>
+            <input type="range" id="slider-tagline-letter-spacing" min="0" max="16" step="1" value="4" class="styled-slider" />
+          </div>
+        </section>
+
+        <!-- =================== TAB 4: BACKDROP & FRAME =================== -->
+        <section class="tab-panel" id="tab-bg" role="tabpanel">
+          <div class="control-card">
+            <h3 class="card-title">🎨 Background Mode</h3>
+            <p class="card-desc">Choose between transparent overlay, green screen chroma key, or solid aesthetic colors.</p>
+
+            <div class="bg-mode-grid" id="bg-mode-selector">
+              <button type="button" class="bg-card-btn active" data-bg="transparent" id="bg-btn-transparent">
+                <div class="bg-swatch-preview checker-preview"></div>
+                <strong>Transparent</strong>
+                <span>Alpha overlay</span>
+              </button>
+              <button type="button" class="bg-card-btn" data-bg="greenscreen" id="bg-btn-greenscreen">
+                <div class="bg-swatch-preview green-preview"></div>
+                <strong>Green Screen</strong>
+                <span>#00FF00 Chroma Key</span>
+              </button>
+              <button type="button" class="bg-card-btn" data-bg="black" id="bg-btn-black">
+                <div class="bg-swatch-preview black-preview"></div>
+                <strong>Black Screen</strong>
+                <span>Screen Blend Mode</span>
+              </button>
+              <button type="button" class="bg-card-btn" data-bg="bluescreen" id="bg-btn-bluescreen">
+                <div class="bg-swatch-preview blue-preview"></div>
+                <strong>Blue Screen</strong>
+                <span>#0000FF Chroma Key</span>
+              </button>
+              <button type="button" class="bg-card-btn" data-bg="solid" id="bg-btn-solid">
+                <div class="bg-swatch-preview solid-preview" id="solid-preview-thumb"></div>
+                <strong>Custom Solid</strong>
+                <span>Pick color</span>
+              </button>
+              <button type="button" class="bg-card-btn" data-bg="cinema-dark" id="bg-btn-cinema">
+                <div class="bg-swatch-preview cinema-preview"></div>
+                <strong>Cinematic Dark</strong>
+                <span>Studio ambient grid</span>
+              </button>
+            </div>
+
+            <!-- Custom solid color picker -->
+            <div class="input-field" id="solid-color-row" style="margin-top: 14px; display: none;">
+              <label for="picker-solid-bg">Solid Background Color</label>
+              <div class="picker-wrap">
+                <input type="color" id="picker-solid-bg" value="#0A0E17" class="color-swatch-input" />
+                <span class="color-hex-badge" id="badge-solid-bg">#0A0E17</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="control-card">
+            <h3 class="card-title">🎛️ Odometer Frame & Housing</h3>
+            <div class="input-field">
+              <label for="select-frame-style">Casing Housing Style</label>
+              <select id="select-frame-style" class="styled-select">
+                <option value="neon-capsule" selected>Neon Glass Capsule (Glowing Pill)</option>
+                <option value="frosted-glass">Frosted Glass (Subtle Translucent)</option>
+                <option value="odometer-bezel">Vintage Odometer Bezel (Mechanical Frame)</option>
+                <option value="minimal-pill">Minimalist Dark Pill</option>
+                <option value="none">None (Clean Floating Digits)</option>
+              </select>
+            </div>
+
+            <div class="color-picker-row">
+              <div class="color-item">
+                <label for="picker-border-color">Border / Rim Color</label>
+                <div class="picker-wrap">
+                  <input type="color" id="picker-border-color" value="#00F5FF" class="color-swatch-input" />
+                  <span class="color-hex-badge" id="badge-border-color">#00F5FF</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- =================== TAB 5: EXPORT VIDEO =================== -->
+        <section class="tab-panel" id="tab-export" role="tabpanel">
+          <div class="control-card highlight-card">
+            <h3 class="card-title">🎬 Render & Download Video</h3>
+            <p class="card-desc">Export your custom Day In My Life timer as a frame-accurate, high-bitrate video clip ready to drag and drop into CapCut, Premiere, DaVinci, or Instagram.</p>
+
+            <div class="export-format-selector" id="export-format-selector">
+              <label class="format-card selected" data-format="mp4">
+                <input type="radio" name="export-format" value="mp4" checked />
+                <div class="format-info">
+                  <div class="format-title-row">
+                    <strong>Single MP4 Video (H.264)</strong>
+                    <span class="format-tag">Recommended</span>
+                  </div>
+                  <span class="format-desc">Universal format. 100% compatible with CapCut, Premiere, DaVinci, iPhones & Androids. Frame-accurate 60 FPS.</span>
+                </div>
+              </label>
+
+              <label class="format-card" data-format="greenscreen-mp4">
+                <input type="radio" name="export-format" value="greenscreen-mp4" />
+                <div class="format-info">
+                  <div class="format-title-row">
+                    <strong>Green Screen MP4</strong>
+                    <span class="format-tag green-tag">Easiest Overlay</span>
+                  </div>
+                  <span class="format-desc">Renders over #00FF00 green. In CapCut or Premiere, tap "Cutout / Chroma Key" for instant seamless transparency.</span>
+                </div>
+              </label>
+
+              <label class="format-card" data-format="webm-alpha">
+                <input type="radio" name="export-format" value="webm-alpha" />
+                <div class="format-info">
+                  <div class="format-title-row">
+                    <strong>Transparent WebM (Alpha VP9)</strong>
+                    <span class="format-tag alpha-tag">Native Alpha</span>
+                  </div>
+                  <span class="format-desc">Video with real transparent background. Supported natively by DaVinci Resolve, Premiere Pro, and OBS.</span>
+                </div>
+              </label>
+            </div>
+
+            <div class="input-row-2" style="margin-top: 16px;">
+              <div class="input-field">
+                <label for="select-fps">Framerate</label>
+                <select id="select-fps" class="styled-select">
+                  <option value="60" selected>60 FPS (Ultra Smooth)</option>
+                  <option value="30">30 FPS (Faster Render / Smaller File)</option>
+                </select>
+              </div>
+              <div class="input-field">
+                <label for="export-aspect-display">Aspect Ratio</label>
+                <input type="text" id="export-aspect-display" value="9:16 Vertical (1080×1920)" class="styled-input" readonly />
+              </div>
+            </div>
+
+            <button type="button" class="btn btn-primary btn-large btn-glow" id="btn-start-export" style="width: 100%; margin-top: 18px;">
+              <span class="btn-icon">⚡</span> Render & Download Video Now
+            </button>
+          </div>
+
+          <!-- Video Editor Guide Card -->
+          <div class="control-card">
+            <h3 class="card-title">📖 10-Second Guide: How to overlay in your Reel</h3>
+            <div class="guide-steps">
+              <div class="guide-step">
+                <span class="step-num">1</span>
+                <div><strong>In CapCut (Mobile / PC):</strong> Add your vlog clip. Tap <em>Overlay &gt; Add Overlay</em> and pick your exported video.</div>
+              </div>
+              <div class="guide-step">
+                <span class="step-num">2</span>
+                <div><strong>If Green Screen:</strong> Tap <em>Cutout &gt; Chroma Key</em>, drag picker to green, set intensity to 15. Done!</div>
+              </div>
+              <div class="guide-step">
+                <span class="step-num">3</span>
+                <div><strong>If Black Background:</strong> Tap <em>Blend &gt; Screen</em> or <em>Add</em>. The black background disappears and the neon timer shines brilliantly!</div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </aside>
+  </main>
+
+  <!-- =================== MODAL: RENDERING PROGRESS =================== -->
+  <div class="modal-backdrop" id="modal-export" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="render-spinner"></div>
+        <div>
+          <h2 class="modal-title" id="render-modal-title">Rendering Video Frame-by-Frame...</h2>
+          <span class="modal-subtitle">Processing deterministic canvas frames with H.264 encoder</span>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <!-- Live Render Preview Thumbnail -->
+        <div class="render-thumb-wrapper">
+          <canvas id="render-thumb-canvas" width="270" height="480"></canvas>
+          <div class="render-badge">LIVE ENCODER STREAM</div>
+        </div>
+
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="export-progress-fill"></div>
+        </div>
+
+        <div class="progress-stats">
+          <span class="stat-percent" id="export-stat-percent">0%</span>
+          <span class="stat-frames" id="export-stat-frames">Frame 0 / 300</span>
+          <span class="stat-eta" id="export-stat-eta">ETA: Calculating...</span>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="btn-cancel-export">Cancel Render</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== MODAL: EXPORT SUCCESS =================== -->
+  <div class="modal-backdrop" id="modal-success" aria-hidden="true">
+    <div class="modal-dialog success-dialog">
+      <div class="success-icon-banner">🎉</div>
+      <h2 class="modal-title">Video Rendered Successfully!</h2>
+      <p class="modal-subtitle" id="success-filename-badge">chrono-reel-timer.mp4 is ready</p>
+
+      <div class="success-video-preview">
+        <video id="success-video-player" controls autoplay loop playsinline></video>
+      </div>
+
+      <div class="modal-footer-success">
+        <button type="button" class="btn btn-primary btn-large btn-glow" id="btn-download-again">
+          ⬇️ Download Again
+        </button>
+        <button type="button" class="btn btn-secondary" id="btn-close-success">
+          Done & Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== MODAL: SAVE PRESET PROMPT =================== -->
+  <div class="modal-backdrop" id="modal-save-preset" aria-hidden="true">
+    <div class="modal-dialog" style="max-width: 400px;">
+      <div class="modal-header">
+        <span style="font-size: 26px;">💾</span>
+        <div>
+          <h2 class="modal-title">Save Custom Preset</h2>
+          <span class="modal-subtitle">Save all current colors, font, and animation styling</span>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="input-field">
+          <label for="input-custom-preset-name">Preset Name</label>
+          <input type="text" id="input-custom-preset-name" placeholder="e.g. My Aesthetic Vlog, Cozy Beige..." class="styled-input" maxlength="28" />
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: space-between;">
+        <button type="button" class="btn btn-secondary" id="btn-cancel-save-preset">Cancel</button>
+        <button type="button" class="btn btn-primary btn-glow" id="btn-confirm-save-preset">Save Preset</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Toast Notifications -->
+  <div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
